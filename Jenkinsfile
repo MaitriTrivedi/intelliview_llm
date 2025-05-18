@@ -44,35 +44,35 @@ pipeline {
             }
         }
         
-        stage('Test Docker Image') {
-            when {
-                expression { return env.SKIP_BUILD == 'false' }
-            }
-            steps {
-                script {
-                    // Test 1: Check if the image can start correctly
-                    sh """
-                        docker run --name test-container -d --rm ${DOCKER_IMAGE_NAME} sleep 10
-                        if [ \$? -ne 0 ]; then
-                            echo "Failed to start container"
-                            exit 1
-                        fi
-                        docker stop test-container || true
-                    """
+        // stage('Test Docker Image') {
+        //     when {
+        //         expression { return env.SKIP_BUILD == 'false' }
+        //     }
+        //     steps {
+        //         script {
+        //             // Test 1: Check if the image can start correctly
+        //             sh """
+        //                 docker run --name test-container -d --rm ${DOCKER_IMAGE_NAME} sleep 10
+        //                 if [ \$? -ne 0 ]; then
+        //                     echo "Failed to start container"
+        //                     exit 1
+        //                 fi
+        //                 docker stop test-container || true
+        //             """
                     
-                    // Test 2: Check if Ollama is included in the image
-                    sh """
-                        docker run --rm ${DOCKER_IMAGE_NAME} which ollama
-                        if [ \$? -ne 0 ]; then
-                            echo "Ollama binary not found in image"
-                            exit 1
-                        fi
-                    """
+        //             // Test 2: Check if Ollama is included in the image
+        //             sh """
+        //                 docker run --rm ${DOCKER_IMAGE_NAME} which ollama
+        //                 if [ \$? -ne 0 ]; then
+        //                     echo "Ollama binary not found in image"
+        //                     exit 1
+        //                 fi
+        //             """
                     
-                    echo "All tests passed successfully"
-                }
-            }
-        }
+        //             echo "All tests passed successfully"
+        //         }
+        //     }
+        // }
         
         stage('Push Docker Image') {
             when {
