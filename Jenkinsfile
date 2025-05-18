@@ -95,7 +95,7 @@ pipeline {
                         ansiblePlaybook(
                             playbook: 'deploy.yml',
                             inventory: 'inventory.ini',
-                            extras: "-e docker_image=${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest -e skip_docker_pull=${env.SKIP_BUILD}"
+                            extras: "-e docker_image=${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest -e skip_docker_pull=${env.SKIP_BUILD} -e ngrok_authtoken=2xHVsxauvmeBqAm6Pl4rRUCL2zc_7upUYuT4N6zoFDoY4fTFT"
                         )
                     }
                 }

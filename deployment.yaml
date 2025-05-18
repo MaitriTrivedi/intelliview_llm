@@ -22,7 +22,7 @@ spec:
           type: Directory
       containers:
       - name: llm-service
-        image: interview-llm:latest
+        image: prabal2011singh/interview-llm:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000

@@ -9,7 +9,7 @@
     skip_docker_pull: "{{ skip_docker_pull | default('false') }}"
     minikube_mount_host: "/usr/share/ollama/.ollama"
     minikube_mount_target: "/usr/share/ollama/.ollama"
-    ngrok_authtoken: "{{ lookup('env', 'NGROK_AUTHTOKEN') | default('') }}"
+    ngrok_authtoken: "{{ lookup('env', 'NGROK_AUTHTOKEN') | default('2xHVsxauvmeBqAm6Pl4rRUCL2zc_7upUYuT4N6zoFDoY4fTFT') }}"
     
   tasks:
     - name: Check if Minikube is installed
@@ -52,7 +52,7 @@
       changed_when: false
       
     - name: Start Minikube if not running
-      command: minikube start
+      command: minikube start 
       when: minikube_status.rc != 0
       register: minikube_start
       changed_when: minikube_start.rc == 0
@@ -79,9 +79,9 @@
       poll: 0
       
     - name: Pull Docker image if not skipped
-      command: docker pull {{ docker_image }}
-      register: pull_result
-      changed_when: pull_result.rc == 0
+      command: minikube load {{ docker_image }}
+      register: load_result
+      changed_when: load_result.rc == 0
       when: skip_docker_pull != 'true'
       
     - name: Kill existing ngrok processes
