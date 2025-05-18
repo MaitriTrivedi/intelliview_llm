@@ -13,40 +13,40 @@ logger = logging.getLogger(__name__)
 
 class ChatRequest(BaseModel):
     messages: List[Dict[str, str]]
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class ParseRequest(BaseModel):
     section_text: str
     section_type: str
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class IntroductionQuestionRequest(BaseModel):
     candidate_name: str
     role: str
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class ProjectQuestionRequest(BaseModel):
     resume_data: Dict[str, Any]
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class TechnicalQuestionRequest(BaseModel):
     resume_data: Dict[str, Any]
     tech_stack: List[str]
     role: str
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class FollowupQuestionRequest(BaseModel):
     previous_question: str
     answer: str
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class CSFundamentalsQuestionRequest(BaseModel):
     role: str
     tech_stack: List[str]
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class DSAQuestionRequest(BaseModel):
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class AnswerEvaluationRequest(BaseModel):
     question: str
@@ -54,7 +54,7 @@ class AnswerEvaluationRequest(BaseModel):
     question_type: str
     role: str
     tech_stack: List[str]
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 class SummaryReportRequest(BaseModel):
     candidate_name: str
@@ -62,7 +62,7 @@ class SummaryReportRequest(BaseModel):
     tech_stack: List[str]
     scores: Dict[str, int]
     interview_log: List[Dict[str, Any]]
-    model: str = "mistral"
+    model: str = "gemma3:4b"
 
 @app.get("/health")
 def health_check():
