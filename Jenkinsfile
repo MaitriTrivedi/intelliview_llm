@@ -93,7 +93,7 @@ pipeline {
                 script {
                     withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {
                         ansiblePlaybook(
-                            playbook: 'deploy-playbook.yml',
+                            playbook: 'deploy.yml',
                             inventory: 'inventory.ini',
                             extras: "-e docker_image=${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest -e skip_docker_pull=${env.SKIP_BUILD}"
                         )
