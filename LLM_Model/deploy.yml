@@ -1,0 +1,196 @@
+---
+- name: Deploy Mock Interview System
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    namespace: final-project
+    docker_image: "{{ docker_image | default('prabal2011singh/interview-llm:latest') }}"
+    skip_docker_pull: "{{ skip_docker_pull | default('false') }}"
+    minikube_mount_host: "/usr/share/ollama/.ollama"
+    minikube_mount_target: "/usr/share/ollama/.ollama"
+    ngrok_authtoken: "{{ lookup('env', 'NGROK_AUTHTOKEN') | default('') }}"
+    
+  tasks:
+    - name: Check if Minikube is installed
+      command: minikube version
+      register: minikube_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Fail if Minikube is not installed
+      fail:
+        msg: "Minikube is not installed. Please install it first."
+      when: minikube_check.rc != 0
+    
+    - name: Check if kubectl is installed
+      command: kubectl version --client
+      register: kubectl_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Fail if kubectl is not installed
+      fail:
+        msg: "kubectl is not installed. Please install it first."
+      when: kubectl_check.rc != 0
+      
+    - name: Check if ngrok is installed
+      command: ngrok version
+      register: ngrok_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Fail if ngrok is not installed
+      fail:
+        msg: "ngrok is not installed. Please install it first."
+      when: ngrok_check.rc != 0
+    
+    - name: Check if Minikube is running
+      command: minikube status
+      register: minikube_status
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Start Minikube if not running
+      command: minikube start
+      when: minikube_status.rc != 0
+      register: minikube_start
+      changed_when: minikube_start.rc == 0
+      
+    - name: Ensure Ollama models directory exists on host
+      file:
+        path: "{{ minikube_mount_host }}"
+        state: directory
+        mode: '0777'
+      become: yes
+      
+    - name: Stop existing Minikube mount (if any)
+      shell: |
+        mount_pid=$(ps aux | grep "minikube mount" | grep -v grep | awk '{print $2}')
+        if [ ! -z "$mount_pid" ]; then
+          kill -9 $mount_pid || true
+        fi
+      changed_when: false
+      ignore_errors: yes
+      
+    - name: Mount host directory into Minikube
+      shell: minikube mount {{ minikube_mount_host }}:{{ minikube_mount_target }} &
+      async: 100
+      poll: 0
+      
+    - name: Pull Docker image if not skipped
+      command: docker pull {{ docker_image }}
+      register: pull_result
+      changed_when: pull_result.rc == 0
+      when: skip_docker_pull != 'true'
+      
+    - name: Kill existing ngrok processes
+      shell: pkill -f ngrok || true
+      changed_when: false
+      ignore_errors: yes
+      
+    - name: Delete existing namespace if it exists
+      command: kubectl get namespace {{ namespace }}
+      register: namespace_check
+      ignore_errors: yes
+      changed_when: false
+      
+    - name: Delete namespace if it exists
+      command: kubectl delete namespace {{ namespace }}
+      when: namespace_check.rc == 0
+      register: delete_namespace
+      changed_when: delete_namespace.rc == 0
+      
+    - name: Wait for namespace deletion
+      command: kubectl get namespace {{ namespace }}
+      register: namespace_deleted
+      until: namespace_deleted.rc != 0
+      retries: 10
+      delay: 10
+      ignore_errors: yes
+      when: namespace_check.rc == 0
+      changed_when: false
+      
+    - name: Create Kubernetes namespace
+      command: kubectl create namespace {{ namespace }}
+      register: create_namespace
+      changed_when: create_namespace.rc == 0
+      
+    - name: Update deployment file with Docker image
+      replace:
+        path: deployment.yaml
+        regexp: 'image: interview-llm:latest'
+        replace: 'image: {{ docker_image }}'
+      
+    - name: Deploy Kubernetes resources
+      command: kubectl apply -f {{ item }} -n {{ namespace }}
+      loop:
+        - "deployment.yaml"
+        - "service.yaml"
+        - "hpa.yaml"
+      register: k8s_apply
+      changed_when: k8s_apply.rc == 0
+      
+    - name: Wait for deployment to be ready
+      command: kubectl rollout status deployment/llm-service -n {{ namespace }}
+      register: rollout_status
+      until: rollout_status.rc == 0
+      retries: 30
+      delay: 10
+      changed_when: false
+      
+    - name: Get service URL
+      command: minikube service llm-service --url -n {{ namespace }}
+      register: service_url
+      changed_when: false
+      
+    - name: Extract port from service URL
+      set_fact:
+        service_port: "{{ service_url.stdout.split(':')[-1] }}"
+      
+    - name: Start ngrok for port forwarding
+      shell: |
+        if [ -n "{{ ngrok_authtoken }}" ]; then
+          ngrok authtoken {{ ngrok_authtoken }}
+        fi
+        ngrok http {{ service_port }} --log=stdout > ngrok.log &
+      async: 300
+      poll: 0
+      changed_when: true
+      
+    - name: Wait for ngrok to start
+      wait_for:
+        path: ngrok.log
+        search_regex: "started tunnel"
+        timeout: 30
+      
+    - name: Get ngrok URL
+      shell: curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'https://[^"]*' || echo "Failed to get ngrok URL"
+      register: ngrok_url
+      retries: 5
+      delay: 5
+      until: ngrok_url.stdout.startswith('https://')
+      changed_when: false
+      
+    - name: Verify service health
+      uri:
+        url: "{{ ngrok_url.stdout }}/health"
+        method: GET
+        return_content: yes
+        status_code: 200
+        body_format: json
+      register: health_check
+      retries: 5
+      delay: 10
+      until: health_check.status == 200
+      
+    - name: Display deployment information
+      debug:
+        msg: 
+          - "Mock Interview System Deployment Information:"
+          - "---------------------------------------"
+          - "Service URL: {{ service_url.stdout }}"
+          - "Public ngrok URL: {{ ngrok_url.stdout }}"
+          - "Namespace: {{ namespace }}"
+          - "Docker Image: {{ docker_image }}"
+          - "Health Status: {{ health_check.json.status }}"
