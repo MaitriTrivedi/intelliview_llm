@@ -1,3 +1,3 @@
 # intelliview_llm
 
-mistral model
+gemma3 4b model

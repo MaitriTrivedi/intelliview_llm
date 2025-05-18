@@ -15,19 +15,27 @@ spec:
       labels:
         app: llm-service
     spec:
+      volumes:
+      - name: ollama-models
+        hostPath:
+          path: /usr/share/ollama/.ollama
+          type: Directory
       containers:
       - name: llm-service
-        image: llm-service-old:latest
+        image: interview-llm:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
+        volumeMounts:
+        - name: ollama-models
+          mountPath: /root/.ollama
         resources:
           requests:
-            memory: "6Gi"  # Increased from 2Gi
+            memory: "4Gi"
             cpu: "4"
           limits:
-            memory: "10Gi"  # Increased from 4Gi
-            cpu: "12"
+            memory: "6Gi"
+            cpu: "6"
         readinessProbe:
           httpGet:
             path: /health

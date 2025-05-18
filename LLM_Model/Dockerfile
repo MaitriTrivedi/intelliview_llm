@@ -27,25 +27,11 @@ COPY start.sh .
 # Make the startup script executable
 RUN chmod +x start.sh
 
-# Install Ollama and download the model during build time
-RUN curl -fsSL https://ollama.com/install.sh | sh && \
-    mkdir -p /root/.ollama && \
-    (ollama serve > /var/log/ollama.log 2>&1 &) && \
-    echo "Waiting for Ollama server to start..." && \
-    for i in $(seq 1 30); do \
-        if curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then \
-            echo "Ollama server is running, pulling model..." && \
-            ollama pull mistral && \
-            echo "Model pulled successfully" && \
-            pkill -f "ollama serve" && \
-            exit 0; \
-        fi; \
-        echo "Waiting... $i/30"; \
-        sleep 3; \
-    done && \
-    echo "Failed to start Ollama server in time" && \
-    cat /var/log/ollama.log && \
-    exit 1
+# Install Ollama without downloading the model
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Create ollama directory structure but don't download models
+RUN mkdir -p /root/.ollama/models/blobs
 
 # Expose the port
 EXPOSE 8000
