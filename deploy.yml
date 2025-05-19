@@ -84,17 +84,17 @@
       changed_when: load_result.rc == 0
       when: skip_docker_pull != 'true'
       
-    - name: Check if ngrok is running
-      shell: pgrep -f ngrok
-      register: ngrok_process
-      changed_when: false
-      failed_when: false  # This ensures the task doesn't fail when ngrok isn't running
+    # - name: Check if ngrok is running
+    #   shell: pgrep -f ngrok
+    #   register: ngrok_process
+    #   changed_when: false
+    #   failed_when: false  # This ensures the task doesn't fail when ngrok isn't running
 
-    - name: Kill existing ngrok processes
-      shell: pkill -f ngrok
-      when: ngrok_process.rc == 0  # Only kill if ngrok is running
-      changed_when: true
-      ignore_errors: yes
+    # - name: Kill existing ngrok processes
+    #   shell: pkill -f ngrok
+    #   when: ngrok_process.rc == 0  # Only kill if ngrok is running
+    #   changed_when: true
+    #   ignore_errors: yes
       
     - name: Delete existing namespace if it exists
       command: kubectl get namespace {{ namespace }}
@@ -151,37 +151,37 @@
       register: service_url
       changed_when: false
       
-    - name: Extract port from service URL
-      set_fact:
-        service_port: "{{ service_url.stdout.split(':')[-1] }}"
+    # - name: Extract port from service URL
+    #   set_fact:
+    #     service_port: "{{ service_url.stdout.split(':')[-1] }}"
       
-    - name: Start ngrok for port forwarding
-      shell: |
-        if [ -n "{{ ngrok_authtoken }}" ]; then
-          ngrok authtoken {{ ngrok_authtoken }}
-        fi
-        ngrok http {{ service_port }} --log=stdout > ngrok.log &
-      async: 300
-      poll: 0
-      changed_when: true
+    # - name: Start ngrok for port forwarding
+    #   shell: |
+    #     if [ -n "{{ ngrok_authtoken }}" ]; then
+    #       ngrok authtoken {{ ngrok_authtoken }}
+    #     fi
+    #     ngrok http {{ service_port }} --log=stdout > ngrok.log &
+    #   async: 300
+    #   poll: 0
+    #   changed_when: true
       
-    - name: Wait for ngrok to start
-      wait_for:
-        path: ngrok.log
-        search_regex: "started tunnel"
-        timeout: 30
+    # - name: Wait for ngrok to start
+    #   wait_for:
+    #     path: ngrok.log
+    #     search_regex: "started tunnel"
+    #     timeout: 30
       
-    - name: Get ngrok URL
-      shell: curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'https://[^"]*' || echo "Failed to get ngrok URL"
-      register: ngrok_url
-      retries: 5
-      delay: 5
-      until: ngrok_url.stdout.startswith('https://')
-      changed_when: false
+    # - name: Get ngrok URL
+    #   shell: curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*' | grep -o 'https://[^"]*' || echo "Failed to get ngrok URL"
+    #   register: ngrok_url
+    #   retries: 5
+    #   delay: 5
+    #   until: ngrok_url.stdout.startswith('https://')
+    #   changed_when: false
       
     - name: Verify service health
       uri:
-        url: "{{ ngrok_url.stdout }}/health"
+        url: "{{ service_url.stdout }}/health"
         method: GET
         return_content: yes
         status_code: 200
@@ -197,7 +197,6 @@
           - "Mock Interview System Deployment Information:"
           - "---------------------------------------"
           - "Service URL: {{ service_url.stdout }}"
-          - "Public ngrok URL: {{ ngrok_url.stdout }}"
           - "Namespace: {{ namespace }}"
           - "Docker Image: {{ docker_image }}"
           - "Health Status: {{ health_check.json.status }}"
