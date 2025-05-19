@@ -84,15 +84,17 @@
       changed_when: load_result.rc == 0
       when: skip_docker_pull != 'true'
       
-    - name: Check if ngrok is running
-      shell: ps aux | grep -v grep | grep -q ngrok
-      register: ngrok_running
-      changed_when: false
-      ignore_errors: yes
+    # - name: Check if ngrok is running
+    #   shell: ps aux | grep -v grep | grep -q ngrok
+    #   register: ngrok_running
+    #   changed_when: false
+    #   ignore_errors: yes
         
-    - name: Kill existing ngrok processes
-      shell: pkill -f ngrok
-      when: ngrok_running.rc == 0   # rc == 0 means grep found ngrok (it's running)
+    - name: Kill existing ngrok processes (if running)
+      shell: |
+        if pgrep -f ngrok > /dev/null; then
+          pkill -f ngrok || true
+        fi
       changed_when: true
       ignore_errors: yes
       
