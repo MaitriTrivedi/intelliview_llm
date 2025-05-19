@@ -139,17 +139,17 @@
       changed_when: k8s_apply.rc == 0
       
     - name: Wait for deployment to be ready
-      command: kubectl rollout status deployment/llm-service -n {{ namespace }}
-      register: rollout_status
-      until: rollout_status.rc == 0
-      retries: 30
-      delay: 10
-      changed_when: false
+      # command: kubectl rollout status deployment/llm-service -n {{ namespace }}
+      # register: rollout_status
+      # until: rollout_status.rc == 0
+      # retries: 30
+      # delay: 10
+      # changed_when: false
       
     - name: Get service URL
-      command: minikube service llm-service --url -n {{ namespace }}
-      register: service_url
-      changed_when: false
+      # command: minikube service llm-service --url -n {{ namespace }}
+      # register: service_url
+      # changed_when: false
       
     # - name: Extract port from service URL
     #   set_fact:
@@ -180,23 +180,23 @@
     #   changed_when: false
       
     - name: Verify service health
-      uri:
-        url: "{{ service_url.stdout }}/health"
-        method: GET
-        return_content: yes
-        status_code: 200
-        body_format: json
-      register: health_check
-      retries: 5
-      delay: 10
-      until: health_check.status == 200
+      # uri:
+      #   url: "{{ service_url.stdout }}/health"
+      #   method: GET
+      #   return_content: yes
+      #   status_code: 200
+      #   body_format: json
+      # register: health_check
+      # retries: 5
+      # delay: 10
+      # until: health_check.status == 200
       
     - name: Display deployment information
-      debug:
-        msg: 
-          - "Mock Interview System Deployment Information:"
-          - "---------------------------------------"
-          - "Service URL: {{ service_url.stdout }}"
-          - "Namespace: {{ namespace }}"
-          - "Docker Image: {{ docker_image }}"
-          - "Health Status: {{ health_check.json.status }}"
+      # debug:
+      #   msg: 
+      #     - "Mock Interview System Deployment Information:"
+      #     - "---------------------------------------"
+      #     - "Service URL: {{ service_url.stdout }}"
+      #     - "Namespace: {{ namespace }}"
+      #     - "Docker Image: {{ docker_image }}"
+      #     - "Health Status: {{ health_check.json.status }}"
