@@ -82,11 +82,18 @@
       command: minikube image load {{ docker_image }}
       register: load_result
       changed_when: load_result.rc == 0
-      # when: skip_docker_pull != 'true'
+      when: skip_docker_pull != 'true'
       
-    - name: Kill existing ngrok processes
-      shell: pkill -f ngrok || true
+    - name: Check if ngrok is running
+      shell: ps aux | grep -v grep | grep -q ngrok
+      register: ngrok_running
       changed_when: false
+      ignore_errors: yes
+        
+    - name: Kill existing ngrok processes
+      shell: pkill -f ngrok
+      when: ngrok_running.rc == 0   # rc == 0 means grep found ngrok (it's running)
+      changed_when: true
       ignore_errors: yes
       
     - name: Delete existing namespace if it exists
