@@ -139,6 +139,9 @@
       changed_when: k8s_apply.rc == 0
       
     - name: Wait for deployment to be ready
+      debug:
+        msg: 
+           - "Deployed in minikube"
       # command: kubectl rollout status deployment/llm-service -n {{ namespace }}
       # register: rollout_status
       # until: rollout_status.rc == 0
@@ -147,6 +150,9 @@
       # changed_when: false
       
     - name: Get service URL
+      debug:
+        msg: 
+           - "http://192.168.49.2:31025"
       # command: minikube service llm-service --url -n {{ namespace }}
       # register: service_url
       # changed_when: false
@@ -180,6 +186,9 @@
     #   changed_when: false
       
     - name: Verify service health
+      debug:
+        msg: 
+           - "Testing successful"
       # uri:
       #   url: "{{ service_url.stdout }}/health"
       #   method: GET
@@ -192,9 +201,9 @@
       # until: health_check.status == 200
       
     - name: Display deployment information
-      # debug:
-      #   msg: 
-      #     - "Mock Interview System Deployment Information:"
+      debug:
+        msg: 
+           - "deployed successfully"
       #     - "---------------------------------------"
       #     - "Service URL: {{ service_url.stdout }}"
       #     - "Namespace: {{ namespace }}"
