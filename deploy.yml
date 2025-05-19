@@ -53,7 +53,7 @@
       
     - name: Start Minikube if not running
       command: minikube start --cpus=6 --memory=12800 --driver=docker 
-      when: minikube_status.rc != 0
+      # when: minikube_status.rc != 0
       register: minikube_start
       changed_when: minikube_start.rc == 0
       
