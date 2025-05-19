@@ -45,11 +45,11 @@
         msg: "ngrok is not installed. Please install it first."
       when: ngrok_check.rc != 0
     
-    - name: Check if Minikube is running
-      command: minikube status
-      register: minikube_status
-      ignore_errors: yes
-      changed_when: false
+    # - name: Check if Minikube is running
+    #   command: minikube status
+    #   register: minikube_status
+    #   ignore_errors: yes
+    #   changed_when: false
       
     - name: Start Minikube if not running
       command: minikube start --cpus=6 --memory=12800 --driver=docker 
@@ -79,10 +79,10 @@
       poll: 0
       
     - name: Pull Docker image if not skipped
-      command: minikube load {{ docker_image }}
+      command: minikube image load {{ docker_image }}
       register: load_result
       changed_when: load_result.rc == 0
-      when: skip_docker_pull != 'true'
+      # when: skip_docker_pull != 'true'
       
     - name: Kill existing ngrok processes
       shell: pkill -f ngrok || true
